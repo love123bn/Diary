@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>🌸 PhotoBooth Cute 🌸</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Quicksand', sans-serif;
+      background: #fdeff2;
+      touch-action: manipulation;
+      -ms-touch-action: manipulation;
+    }
+    #app {
+      width: 100%;
+      max-width: 500px;
+      height: 100vh;
+      margin: 0 auto;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #ffeef8 0%, #fde4f0 100%);
+      box-shadow: 0 0 30px rgba(255, 140, 170, 0.2);
+      overflow: hidden;
+    }
+    /* TOP BAR */
+    .top-bar {
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+      background: rgba(255, 240, 245, 0.8);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #ffd9e6;
+    }
+    .top-bar .title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #d44a7a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .top-bar .title span {
+      font-size: 1.6rem;
+    }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(255, 140, 170, 0.25);
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      color: #d44a7a;
+      position: relative;
+    }
+    .icon-btn:active {
+      transform: scale(0.9);
+      box-shadow: 0 1px 4px rgba(255, 140, 170, 0.4);
+    }
+    .badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ff5e8a;
+      color: #fff;
+      font-size: 0.65rem;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+    /* CAMERA VIEW */
+    .camera-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #000;
+      margin: 8px 12px;
+      border-radius: 28px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      border: 3px solid #fff;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 25px;
+      transform: scaleX(-1);
+      transition: filter 0.3s;
+    }
+    canvas {
+      display: none;
+    }
+    .timer-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.3);
+      border-radius: 25px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .timer-overlay.active {
+      opacity: 1;
+    }
+    .timer-number {
+      font-size: 5rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 4px 15px rgba(255, 140, 170, 0.8);
+      animation: pop 0.5s ease;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    /* PREVIEW STRIP */
+    .preview-strip {
+      display: flex;
+      gap: 10px;
+      padding: 10px 15px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      min-height: 85px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.6);
+      margin: 0 12px;
+      border-radius: 20px;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .preview-strip::-webkit-scrollbar {
+      display: none;
+    }
+    .preview-item {
+      position: relative;
+      width: 55px;
+      height: 70px;
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+      border: 2px solid #fff;
+      transition: transform 0.2s;
+    }
+    .preview-item:active {
+      transform: scale(0.95);
+    }
+    .preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    .preview-item .del-preview {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ff4466;
+      color: #fff;
+      border: none;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      z-index: 2;
+    }
+    .empty-strip {
+      color: #d3a0b5;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      padding: 0 8px;
+    }
+    /* CONTROLS */
+    .controls {
+      padding: 12px 20px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .shutter-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      order: 1;
+      flex: 1;
+    }
+    .shutter-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ff7da5, #ff4f80);
+      border: 5px solid #fff;
+      box-shadow: 0 6px 18px rgba(255, 80, 120, 0.5), 0 0 0 6px rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      transition: all 0.1s ease;
+      position: relative;
+    }
+    .shutter-btn:active {
+      transform: scale(0.88);
+      box-shadow: 0 2px 8px rgba(255, 80, 120, 0.7), 0 0 0 8px rgba(255, 255, 255, 0.5);
+    }
+    .shutter-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      opacity: 0.7;
+    }
+    .side-btns {
+      display: flex;
+      gap: 12px;
+      order: 0;
+    }
+    .side-btns.right {
+      order: 2;
+    }
+    .small-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #ffd0dd;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+      transition: 0.15s;
+      color: #c94b6e;
+    }
+    .small-btn:active {
+      background: #ffe4ec;
+    }
+    .merge-btn {
+      background: #ffd966;
+      border: 2px solid #ffb347;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #8b4c1c;
+      padding: 0 12px;
+      border-radius: 25px;
+      width: auto;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .save-single-btn {
+      background: #a5d6a5;
+      border: 2px solid #6fbf6f;
+      color: #1e4a1e;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-radius: 25px;
+      padding: 0 14px;
+      width: auto;
+      gap: 4px;
+    }
+    /* MODALS */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-content {
+      background: #fff4f8;
+      border-radius: 30px;
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      position: relative;
+    }
+    .modal-content img {
+      width: 100%;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .modal-actions {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .modal-btn {
+      padding: 12px 22px;
+      border-radius: 30px;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .modal-btn:active { transform: scale(0.95); }
+    .btn-save { background: #ff8da1; color: #fff; }
+    .btn-delete { background: #eee; color: #b44; }
+    .btn-close { background: #fff; color: #666; border: 1px solid #ddd; }
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      width: 100%;
+    }
+    .library-item {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      aspect-ratio: 3/4;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      cursor: pointer;
+      border: 2px solid #fff;
+      transition: 0.2s;
+    }
+    .library-item img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .library-item .lib-del {
+      position: absolute;
+      top: 5px; right: 5px;
+      background: rgba(255,60,80,0.9);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 28px; height: 28px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      z-index: 2;
+    }
+    /* FILTER PANEL */
+    .filter-panel {
+      position: absolute;
+      bottom: 130px;
+      left: 15px;
+      right: 15px;
+      background: rgba(255, 245, 250, 0.95);
+      border-radius: 25px;
+      padding: 12px;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      z-index: 20;
+      transition: transform 0.3s, opacity 0.3s;
+      transform: translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .filter-panel.active {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .filter-option {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      flex-shrink: 0;
+      cursor: pointer;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffb6c1;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: 0.15s;
+      text-align: center;
+      line-height: 1.1;
+    }
+    .filter-option.selected {
+      border-color: #ff3b6e;
+      box-shadow: 0 0 0 4px rgba(255, 59, 110, 0.3);
+    }
+    /* TIMER SELECT */
+    .timer-select {
+      position: absolute;
+      bottom: 130px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border-radius: 30px;
+      padding: 10px 18px;
+      display: flex;
+      gap: 12px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      z-index: 20;
+      transition: 0.3s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .timer-select.active {
+      opacity: 1;
+      pointer-events: auto;
+      bottom: 140px;
+    }
+    .timer-opt {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 2px solid #ffb6c1;
+      background: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s;
+      color: #d44a7a;
+    }
+    .timer-opt.active-timer {
+      background: #ff5e8a;
+      color: #fff;
+      border-color: #ff5e8a;
+    }
+    /* NO CAMERA */
+    .no-camera-msg {
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    @media (max-width: 380px) {
+      .shutter-btn { width: 64px; height: 64px; }
+      .controls { padding: 8px 10px 16px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="title"><span>🌸</span> PhotoCute</div>
+    <div style="display:flex; gap:8px;">
+      <button class="icon-btn" id="btnFlip" title="Lật camera">🔄</button>
+      <button class="icon-btn" id="btnLibrary" title="Thư viện">🖼️<span class="badge" id="libBadge" style="display:none;">0</span></button>
+    </div>
+  </div>
+
+  <!-- CAMERA -->
+  <div class="camera-container" id="cameraContainer">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="captureCanvas"></canvas>
+    <div class="timer-overlay" id="timerOverlay">
+      <div class="timer-number" id="timerNumber"></div>
+    </div>
+  </div>
+
+  <!-- PREVIEW STRIP -->
+  <div class="preview-strip" id="previewStrip">
+    <span class="empty-strip">✨ Chụp ảnh để bắt đầu ✨</span>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="side-btns">
+      <button class="small-btn" id="btnFilter" title="Bộ lọc">🎨</button>
+      <button class="small-btn" id="btnTimer" title="Hẹn giờ">⏱️</button>
+      <button class="small-btn" id="btnBorder" title="Viền khung">🖼️</button>
+    </div>
+    <div class="shutter-wrapper">
+      <button class="shutter-btn" id="btnCapture" title="Chụp ảnh"></button>
+    </div>
+    <div class="side-btns right">
+      <button class="small-btn merge-btn" id="btnMerge" style="display:none;" title="Ghép ảnh">✨ Ghép</button>
+      <button class="small-btn save-single-btn" id="btnSaveSingle" style="display:none;" title="Lưu ảnh đơn">💾 Lưu</button>
+    </div>
+  </div>
+
+  <!-- FILTER PANEL -->
+  <div class="filter-panel" id="filterPanel">
+    <div class="filter-option selected" data-filter="none">Gốc</div>
+    <div class="filter-option" data-filter="grayscale(1)">Xám</div>
+    <div class="filter-option" data-filter="sepia(0.8)">Sepia</div>
+    <div class="filter-option" data-filter="blur(1px)">Mờ</div>
+    <div class="filter-option" data-filter="brightness(1.3)">Sáng</div>
+    <div class="filter-option" data-filter="contrast(1.4)">Tương phản</div>
+    <div class="filter-option" data-filter="hue-rotate(60deg)">Tím</div>
+    <div class="filter-option" data-filter="saturate(2)">Rực</div>
+    <div class="filter-option" data-filter="sepia(0.4) hue-rotate(-20deg) saturate(1.5)">Vintage</div>
+    <div class="filter-option" data-filter="hue-rotate(140deg) saturate(1.8) brightness(1.1)">Hồng</div>
+  </div>
+
+  <!-- TIMER SELECT -->
+  <div class="timer-select" id="timerSelect">
+    <button class="timer-opt" data-time="0">Tắt</button>
+    <button class="timer-opt" data-time="3">3s</button>
+    <button class="timer-opt" data-time="5">5s</button>
+    <button class="timer-opt" data-time="10">10s</button>
+  </div>
+
+  <!-- RESULT MODAL -->
+  <div class="modal-overlay" id="resultModal">
+    <div class="modal-content">
+      <h3 style="color:#d44a7a;">Ảnh ghép của bạn ✨</h3>
+      <img id="resultImage" src="" alt="Kết quả ghép">
+      <div class="modal-actions">
+        <button class="modal-btn btn-save" id="btnResultSave">💖 Lưu</button>
+        <button class="modal-btn btn-delete" id="btnResultDelete">🗑️ Xóa</button>
+        <button class="modal-btn btn-close" id="btnResultClose">✖ Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIBRARY MODAL -->
+  <div class="modal-overlay" id="libraryModal">
+    <div class="modal-content" style="max-height:80vh;">
+      <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+        <h3 style="color:#d44a7a;">📸 Thư viện ảnh</h3>
+        <button class="icon-btn" id="btnCloseLibrary" style="width:35px;height:35px;">✖</button>
+      </div>
+      <div class="library-grid" id="libraryGrid"></div>
+      <p id="emptyLibMsg" style="color:#b38; display:none;">Chưa có ảnh lưu nào 💕</p>
+    </div>
+  </div>
+
+  <!-- SINGLE IMAGE VIEW MODAL -->
+  <div class="modal-overlay" id="singleViewModal">
+    <div class="modal-content">
+      <img id="singleViewImage" src="" alt="Ảnh">
+      <div class="modal-actions">
+        <button class="modal-btn btn-save" id="btnDownloadSingle">📥 Tải về</button>
+        <button class="modal-btn btn-delete" id="btnDeleteSingle">🗑️ Xóa</button>
+        <button class="modal-btn btn-close" id="btnCloseSingleView">✖ Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // DOM elements
+    const video = document.getElementById('video');
+    const captureCanvas = document.getElementById('captureCanvas');
+    const ctx = captureCanvas.getContext('2d');
+    const cameraContainer = document.getElementById('cameraContainer');
+    const timerOverlay = document.getElementById('timerOverlay');
+    const timerNumber = document.getElementById('timerNumber');
+    const previewStrip = document.getElementById('previewStrip');
+    const btnCapture = document.getElementById('btnCapture');
+    const btnMerge = document.getElementById('btnMerge');
+    const btnSaveSingle = document.getElementById('btnSaveSingle');
+    const btnFlip = document.getElementById('btnFlip');
+    const btnLibrary = document.getElementById('btnLibrary');
+    const libBadge = document.getElementById('libBadge');
+    const btnFilter = document.getElementById('btnFilter');
+    const btnTimer = document.getElementById('btnTimer');
+    const btnBorder = document.getElementById('btnBorder');
+    const filterPanel = document.getElementById('filterPanel');
+    const timerSelect = document.getElementById('timerSelect');
+    const resultModal = document.getElementById('resultModal');
+    const resultImage = document.getElementById('resultImage');
+    const btnResultSave = document.getElementById('btnResultSave');
+    const btnResultDelete = document.getElementById('btnResultDelete');
+    const btnResultClose = document.getElementById('btnResultClose');
+    const libraryModal = document.getElementById('libraryModal');
+    const libraryGrid = document.getElementById('libraryGrid');
+    const emptyLibMsg = document.getElementById('emptyLibMsg');
+    const btnCloseLibrary = document.getElementById('btnCloseLibrary');
+    const singleViewModal = document.getElementById('singleViewModal');
+    const singleViewImage = document.getElementById('singleViewImage');
+    const btnDownloadSingle = document.getElementById('btnDownloadSingle');
+    const btnDeleteSingle = document.getElementById('btnDeleteSingle');
+    const btnCloseSingleView = document.getElementById('btnCloseSingleView');
+
+    // State
+    let capturedImages = []; // array of dataURLs
+    let savedImages = []; // library
+    let currentFilter = 'none';
+    let timerDuration = 0;
+    let currentBorder = 'solid-pink';
+    let currentFacingMode = 'user'; // user = front camera
+    let stream = null;
+    let isCapturing = false;
+    let selectedTimerOption = null;
+
+    // Border styles
+    const borders = ['solid-pink', 'solid-purple', 'dashed-pink', 'double-blue', 'none'];
+    let borderIndex = 0;
+    const borderNames = {
+      'solid-pink': 'Viền hồng',
+      'solid-purple': 'Viền tím',
+      'dashed-pink': 'Viền đứt hồng',
+      'double-blue': 'Viền đôi xanh',
+      'none': 'Không viền'
+    };
+
+    // Initialize camera
+    async function initCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: currentFacingMode,
+            width: { ideal: 1080 },
+            height: { ideal: 1440 },
+            aspectRatio: { ideal: 3/4 }
+          },
+          audio: false
+        });
+        video.srcObject = stream;
+        await video.play();
+        // Mirror front camera
+        if (currentFacingMode === 'user') {
+          video.style.transform = 'scaleX(-1)';
+        } else {
+          video.style.transform = 'scaleX(1)';
+        }
+        // Apply current filter to video
+        video.style.filter = currentFilter === 'none' ? '' : currentFilter;
+      } catch (err) {
+        console.error('Camera error:', err);
+        cameraContainer.innerHTML = '<div class="no-camera-msg">⚠️ Không thể truy cập camera.<br/>Vui lòng cấp quyền hoặc dùng thiết bị có camera.</div>';
+      }
+    }
+
+    // Flip camera
+    btnFlip.addEventListener('click', () => {
+      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+      initCamera();
+    });
+
+    // Capture photo
+    function capturePhoto() {
+      if (!stream || video.readyState !== 4) return;
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      captureCanvas.width = vw;
+      captureCanvas.height = vh;
+      ctx.save();
+      // Flip if front camera to match mirror view
+      if (currentFacingMode === 'user') {
+        ctx.translate(vw, 0);
+        ctx.scale(-1, 1);
+      }
+      // Apply filter on canvas
+      ctx.filter = currentFilter === 'none' ? 'none' : currentFilter;
+      ctx.drawImage(video, 0, 0, vw, vh);
+      ctx.restore();
+      const dataURL = captureCanvas.toDataURL('image/png');
+      capturedImages.push(dataURL);
+      if (capturedImages.length > 6) {
+        capturedImages.shift(); // keep max 6
+      }
+      updatePreviewStrip();
+      updateButtons();
+    }
+
+    // Delete single captured image
+    function deleteCaptured(index) {
+      capturedImages.splice(index, 1);
+      updatePreviewStrip();
+      updateButtons();
+    }
+
+    // Update preview strip
+    function updatePreviewStrip() {
+      previewStrip.innerHTML = '';
+      if (capturedImages.length === 0) {
+        previewStrip.innerHTML = '<span class="empty-strip">✨ Chụp ảnh để bắt đầu ✨</span>';
+      } else {
+        capturedImages.forEach((img, idx) => {
+          const div = document.createElement('div');
+          div.className = 'preview-item';
+          const image = document.createElement('img');
+          image.src = img;
+          div.appendChild(image);
+          const delBtn = document.createElement('button');
+          delBtn.className = 'del-preview';
+          delBtn.innerHTML = '×';
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteCaptured(idx);
+          });
+          div.appendChild(delBtn);
+          previewStrip.appendChild(div);
+        });
+      }
+    }
+
+    // Update merge/save buttons
+    function updateButtons() {
+      if (capturedImages.length >= 2) {
+        btnMerge.style.display = 'flex';
+        btnSaveSingle.style.display = 'none';
+      } else if (capturedImages.length === 1) {
+        btnMerge.style.display = 'none';
+        btnSaveSingle.style.display = 'flex';
+      } else {
+        btnMerge.style.display = 'none';
+        btnSaveSingle.style.display = 'none';
+      }
+    }
+
+    // Save single image to library
+    btnSaveSingle.addEventListener('click', () => {
+      if (capturedImages.length === 1) {
+        savedImages.push(capturedImages[0]);
+        updateLibraryBadge();
+        capturedImages = [];
+        updatePreviewStrip();
+        updateButtons();
+        alert('✅ Đã lưu ảnh vào thư viện!');
+      }
+    });
+
+    // Merge images
+    function mergeImages() {
+      if (capturedImages.length < 2) return;
+      // Load all images
+      const imgs = [];
+      let loaded = 0;
+      const total = capturedImages.length;
+      capturedImages.forEach((dataURL, i) => {
+        const img = new Image();
+        img.onload = () => {
+          imgs[i] = img;
+          loaded++;
+          if (loaded === total) {
+            drawMergedCanvas(imgs);
+          }
+        };
+        img.src = dataURL;
+      });
+    }
+
+    function drawMergedCanvas(imgs) {
+      // Calculate dimensions
+      const padding = 12;
+      const borderWidth = currentBorder === 'none' ? 0 : (currentBorder === 'double-blue' ? 8 : 6);
+      const gap = 10;
+      let maxWidth = 0;
+      const imgDimensions = imgs.map(img => {
+        maxWidth = Math.max(maxWidth, img.width);
+        return { w: img.width, h: img.height };
+      });
+      const frameWidth = maxWidth + 2 * padding + 2 * borderWidth;
+      let totalHeight = 0;
+      imgDimensions.forEach((dim, i) => {
+        totalHeight += dim.h + 2 * padding + 2 * borderWidth;
+        if (i < imgs.length - 1) totalHeight += gap;
+      });
+
+      const mergeCanvas = document.createElement('canvas');
+      mergeCanvas.width = frameWidth;
+      mergeCanvas.height = totalHeight;
+      const mctx = mergeCanvas.getContext('2d');
+
+      // Background white
+      mctx.fillStyle = '#ffffff';
+      mctx.fillRect(0, 0, frameWidth, totalHeight);
+
+      let yOffset = 0;
+      imgs.forEach((img, i) => {
+        const dim = imgDimensions[i];
+        const frameH = dim.h + 2 * padding + 2 * borderWidth;
+        const imgX = (frameWidth - dim.w) / 2;
+        const imgY = yOffset + padding + borderWidth;
+
+        // Draw border
+        if (currentBorder !== 'none') {
+          mctx.save();
+          const bx = (frameWidth - (dim.w + 2 * padding + 2 * borderWidth)) / 2 + borderWidth/2;
+          const by = yOffset + borderWidth/2;
+          const bw = dim.w + 2 * padding + borderWidth;
+          const bh = dim.h + 2 * padding + borderWidth;
+          const radius = 16;
+
+          mctx.beginPath();
+          mctx.roundRect(bx, by, bw, bh, radius);
+
+          if (currentBorder === 'solid-pink') {
+            mctx.strokeStyle = '#FF69B4';
+            mctx.lineWidth = borderWidth;
+            mctx.stroke();
+          } else if (currentBorder === 'solid-purple') {
+            mctx.strokeStyle = '#C9A0DC';
+            mctx.lineWidth = borderWidth;
+            mctx.stroke();
+          } else if (currentBorder === 'dashed-pink') {
+            mctx.strokeStyle = '#FF69B4';
+            mctx.lineWidth = 4;
+            mctx.setLineDash([10, 6]);
+            mctx.stroke();
+            mctx.setLineDash([]);
+          } else if (currentBorder === 'double-blue') {
+            mctx.strokeStyle = '#6CB4EE';
+            mctx.lineWidth = 8;
+            mctx.stroke();
+            mctx.strokeStyle = '#fff';
+            mctx.lineWidth = 3;
+            mctx.stroke();
+          }
+          mctx.restore();
+        }
+
+        // Draw image
+        mctx.drawImage(img, imgX, imgY, dim.w, dim.h);
+
+        yOffset += frameH + gap;
+      });
+
+      const resultDataURL = mergeCanvas.toDataURL('image/png');
+      resultImage.src = resultDataURL;
+      resultImage.setAttribute('data-full', resultDataURL);
+      resultModal.classList.add('active');
+    }
+
+    // Result modal actions
+    btnResultSave.addEventListener('click', () => {
+      const data = resultImage.getAttribute('data-full');
+      if (data) {
+        savedImages.push(data);
+        updateLibraryBadge();
+        capturedImages = [];
+        updatePreviewStrip();
+        updateButtons();
+        resultModal.classList.remove('active');
+        alert('💖 Đã lưu vào thư viện!');
+      }
+    });
+
+    btnResultDelete.addEventListener('click', () => {
+      capturedImages = [];
+      updatePreviewStrip();
+      updateButtons();
+      resultModal.classList.remove('active');
+    });
+
+    btnResultClose.addEventListener('click', () => {
+      resultModal.classList.remove('active');
+    });
+
+    // Library
+    function updateLibraryBadge() {
+      const count = savedImages.length;
+      if (count > 0) {
+        libBadge.style.display = 'flex';
+        libBadge.textContent = count;
+      } else {
+        libBadge.style.display = 'none';
+      }
+    }
+
+    function renderLibrary() {
+      libraryGrid.innerHTML = '';
+      if (savedImages.length === 0) {
+        emptyLibMsg.style.display = 'block';
+      } else {
+        emptyLibMsg.style.display = 'none';
+        savedImages.forEach((data, idx) => {
+          const item = document.createElement('div');
+          item.className = 'library-item';
+          const img = document.createElement('img');
+          img.src = data;
+          img.addEventListener('click', () => {
+            singleViewImage.src = data;
+            singleViewImage.setAttribute('data-index', idx);
+            singleViewModal.classList.add('active');
+          });
+          item.appendChild(img);
+          const delBtn = document.createElement('button');
+          delBtn.className = 'lib-del';
+          delBtn.innerHTML = '×';
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm('Xóa ảnh này khỏi thư viện?')) {
+              savedImages.splice(idx, 1);
+              updateLibraryBadge();
+              renderLibrary();
+            }
+          });
+          item.appendChild(delBtn);
+          libraryGrid.appendChild(item);
+        });
+      }
+    }
+
+    btnLibrary.addEventListener('click', () => {
+      renderLibrary();
+      libraryModal.classList.add('active');
+    });
+
+    btnCloseLibrary.addEventListener('click', () => {
+      libraryModal.classList.remove('active');
+    });
+
+    // Single view modal
+    btnDownloadSingle.addEventListener('click', () => {
+      const data = singleViewImage.src;
+      const a = document.createElement('a');
+      a.href = data;
+      a.download = 'photo_cute_' + Date.now() + '.png';
+      a.click();
+    });
+
+    btnDeleteSingle.addEventListener('click', () => {
+      const idx = parseInt(singleViewImage.getAttribute('data-index'));
+      if (!isNaN(idx) && idx >= 0 && idx < savedImages.length) {
+        if (confirm('Xóa ảnh này?')) {
+          savedImages.splice(idx, 1);
+          updateLibraryBadge();
+          singleViewModal.classList.remove('active');
+          renderLibrary();
+        }
+      }
+    });
+
+    btnCloseSingleView.addEventListener('click', () => {
+      singleViewModal.classList.remove('active');
+    });
+
+    // Close modals on overlay click
+    [resultModal, libraryModal, singleViewModal].forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('active');
+      });
+    });
+
+    // Border cycling
+    btnBorder.addEventListener('click', () => {
+      borderIndex = (borderIndex + 1) % borders.length;
+      currentBorder = borders[borderIndex];
+      btnBorder.title = 'Viền: ' + borderNames[currentBorder];
+      // Visual feedback
+      btnBorder.style.background = '#ffe0ec';
+      setTimeout(() => { btnBorder.style.background = ''; }, 200);
+      alert('🎀 Viền: ' + borderNames[currentBorder]);
+    });
+
+    // Filter panel
+    btnFilter.addEventListener('click', () => {
+      filterPanel.classList.toggle('active');
+      timerSelect.classList.remove('active');
+    });
+
+    filterPanel.querySelectorAll('.filter-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        filterPanel.querySelectorAll('.filter-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        currentFilter = opt.dataset.filter;
+        video.style.filter = currentFilter === 'none' ? '' : currentFilter;
+        filterPanel.classList.remove('active');
+      });
+    });
+
+    // Timer select
+    btnTimer.addEventListener('click', () => {
+      timerSelect.classList.toggle('active');
+      filterPanel.classList.remove('active');
+    });
+
+    timerSelect.querySelectorAll('.timer-opt').forEach(opt => {
+      opt.addEventListener('click', () => {
+        timerSelect.querySelectorAll('.timer-opt').forEach(o => o.classList.remove('active-timer'));
+        opt.classList.add('active-timer');
+        timerDuration = parseInt(opt.dataset.time);
+        timerSelect.classList.remove('active');
+        if (timerDuration === 0) {
+          btnTimer.textContent = '⏱️';
+        } else {
+          btnTimer.textContent = '⏱️' + timerDuration + 's';
+        }
+      });
+    });
+
+    // Capture with timer
+    btnCapture.addEventListener('click', () => {
+      if (isCapturing) return;
+      if (!stream) {
+        alert('Camera chưa sẵn sàng');
+        return;
+      }
+      if (capturedImages.length >= 6) {
+        alert('Bạn đã chụp tối đa 6 ảnh. Hãy ghép hoặc xóa bớt.');
+        return;
+      }
+      if (timerDuration > 0) {
+        startTimerCapture();
+      } else {
+        capturePhoto();
+      }
+    });
+
+    function startTimerCapture() {
+      isCapturing = true;
+      let count = timerDuration;
+      timerOverlay.classList.add('active');
+      timerNumber.textContent = count;
+      const interval = setInterval(() => {
+        count--;
+        if (count <= 0) {
+          clearInterval(interval);
+          timerNumber.textContent = '';
+          timerOverlay.classList.remove('active');
+          capturePhoto();
+          isCapturing = false;
+        } else {
+          timerNumber.textContent = count;
+          timerNumber.style.animation = 'none';
+          void timerNumber.offsetWidth;
+          timerNumber.style.animation = 'pop 0.5s ease';
+        }
+      }, 1000);
+    }
+
+    // Merge button
+    btnMerge.addEventListener('click', () => {
+      if (capturedImages.length >= 2) {
+        mergeImages();
+      }
+    });
+
+    // Close panels when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!filterPanel.contains(e.target) && e.target !== btnFilter) {
+        filterPanel.classList.remove('active');
+      }
+      if (!timerSelect.contains(e.target) && e.target !== btnTimer) {
+        timerSelect.classList.remove('active');
+      }
+    });
+
+    // Prevent zoom gestures
+    document.addEventListener('gesturestart', (e) => e.preventDefault());
+    document.addEventListener('gesturechange', (e) => e.preventDefault());
+    document.addEventListener('gestureend', (e) => e.preventDefault());
+    // Prevent double-tap zoom on specific elements
+    document.querySelectorAll('button, img, .preview-item, .library-item').forEach(el => {
+      el.addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) e.preventDefault();
+      }, {passive: false});
+    });
+
+    // Initialize
+    updateLibraryBadge();
+    updateButtons();
+    initCamera().then(() => {
+      console.log('Camera started');
+    });
+
+    // Handle page visibility to stop/start camera
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+          stream = null;
+        }
+      } else {
+        initCamera();
+      }
+    });
+
+    // RoundRect polyfill
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+      CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+        if (typeof r === 'number') r = {tl: r, tr: r, br: r, bl: r};
+        this.beginPath();
+        this.moveTo(x + r.tl, y);
+        this.lineTo(x + w - r.tr, y);
+        this.quadraticCurveTo(x + w, y, x + w, y + r.tr);
+        this.lineTo(x + w, y + h - r.br);
+        this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
+        this.lineTo(x + r.bl, y + h);
+        this.quadraticCurveTo(x, y + h, x, y + h - r.bl);
+        this.lineTo(x, y + r.tl);
+        this.quadraticCurveTo(x, y, x + r.tl, y);
+        this.closePath();
+        return this;
+      };
+    }
+  })();
+</script>
+</body>
+</html>
